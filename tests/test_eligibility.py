@@ -18,6 +18,18 @@ def test_health():
     assert response.json() == {"status": "ok"}
 
 
+def test_health_returns_200_when_feature_x_unset_or_false(monkeypatch):
+    monkeypatch.delenv("FEATURE_X", raising=False)
+    unset = client.get("/health")
+    assert unset.status_code == 200
+    assert unset.json() == {"status": "ok"}
+
+    monkeypatch.setenv("FEATURE_X", "false")
+    disabled = client.get("/health")
+    assert disabled.status_code == 200
+    assert disabled.json() == {"status": "ok"}
+
+
 def test_eligible_when_plan_covers_service():
     response = client.post("/eligibility", json=ELIGIBLE)
 

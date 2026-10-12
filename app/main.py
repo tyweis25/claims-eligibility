@@ -49,7 +49,9 @@ def _feature_y_failure() -> JSONResponse | None:
 
 
 @app.get("/health")
-def health() -> dict[str, str]:
+def health():
+    if os.getenv("FEATURE_X") == "true":
+        return JSONResponse(status_code=500, content={"status": "error"})
     return {"status": "ok"}
 
 
