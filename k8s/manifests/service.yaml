@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: claims-eligibility
+  labels:
+    app: claims-eligibility
+spec:
+  type: ClusterIP
+  selector:
+    app: claims-eligibility
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8000
