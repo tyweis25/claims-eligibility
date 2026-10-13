@@ -1,8 +1,4 @@
 replicas: 1
 image: <+artifact.image>
-<<<<<<< HEAD
-featureX: "false"
-featureY: "false"
-=======
 featureX: "true"
->>>>>>> e71ca89 (Fail the health check when FEATURE_X is true.)
+featureY: "false"
