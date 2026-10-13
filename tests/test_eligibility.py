@@ -68,6 +68,68 @@ def test_ineligible_when_service_is_not_covered():
     assert body["reason"] == "Service 93000 is not covered by plan HMO-200"
 
 
+def test_eligible_telehealth_on_ppo():
+    response = client.post(
+        "/eligibility",
+        json={**ELIGIBLE, "service_code": "99441"},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "eligible": True,
+        "reason": "Service 99441 is covered by plan PPO-100",
+    }
+
+
+def test_eligible_telehealth_on_hmo():
+    response = client.post(
+        "/eligibility",
+        json={
+            "member_id": "M1002",
+            "plan_code": "HMO-200",
+            "service_code": "99441",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "eligible": True,
+        "reason": "Service 99441 is covered by plan HMO-200",
+    }
+
+
+def test_ineligible_telehealth_when_member_is_unknown():
+    response = client.post(
+        "/eligibility",
+        json={
+            "member_id": "M9999",
+            "plan_code": "PPO-100",
+            "service_code": "99441",
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["eligible"] is False
+    assert body["reason"] == "Member not found"
+
+
+def test_ineligible_telehealth_when_plan_does_not_match_enrollment():
+    response = client.post(
+        "/eligibility",
+        json={
+            "member_id": "M1001",
+            "plan_code": "HMO-200",
+            "service_code": "99441",
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["eligible"] is False
+    assert body["reason"] == "Member is enrolled in PPO-100, not HMO-200"
+
+
 def test_invalid_when_field_is_missing():
     response = client.post(
         "/eligibility",
