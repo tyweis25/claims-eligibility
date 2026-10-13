@@ -29,6 +29,8 @@ spec:
           env:
             - name: FEATURE_X
               value: "{{.Values.featureX}}"
+            - name: FEATURE_Y
+              value: "{{.Values.featureY}}"
           readinessProbe:
             httpGet:
               path: /health

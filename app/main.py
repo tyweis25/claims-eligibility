@@ -1,6 +1,9 @@
 """Minimal claims eligibility API for a live demo."""
 
+import os
+
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 app = FastAPI(title="claims-eligibility")
@@ -30,13 +33,32 @@ class EligibilityResponse(BaseModel):
     reason: str
 
 
+# Counts POST /eligibility calls while FEATURE_Y is true. Calls 1, 2, 6, 7, ...
+# fail, which is 2 of every 5 (40 percent). Health never consults this.
+_eligibility_calls = 0
+
+
+def _feature_y_failure() -> JSONResponse | None:
+    global _eligibility_calls
+    if os.getenv("FEATURE_Y") != "true":
+        return None
+    _eligibility_calls += 1
+    if _eligibility_calls % 5 in (1, 2):
+        return JSONResponse(status_code=500, content={"detail": "eligibility unavailable"})
+    return None
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@app.post("/eligibility")
-def check_eligibility(body: EligibilityRequest) -> EligibilityResponse:
+@app.post("/eligibility", response_model=None)
+def check_eligibility(body: EligibilityRequest) -> EligibilityResponse | JSONResponse:
+    failure = _feature_y_failure()
+    if failure is not None:
+        return failure
+
     enrolled_plan = ENROLLMENT.get(body.member_id)
     if enrolled_plan is None:
         return EligibilityResponse(eligible=False, reason="Member not found")
